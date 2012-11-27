@@ -217,36 +217,8 @@ class Game:
                         4: kolešček gor
                         5: kolešček dol
                         8: stranski
-                    
                     """
-                    """
-                    if(event.button == 1):
-                        for player in self.playerGroup:
-                            player.keypress((event.type, event.button))
-                    elif(event.button == 3):
-                        for player in self.playerGroup:
-                            player.keypress((event.type, event.button))
-                elif(event.type == MOUSEBUTTONUP):
-                    if(event.button == 3):
-                        self.selection_rect = pygame.Rect(self.selection_first_pos, (-(self.selection_first_pos[0]-event.pos[0]), -(self.selection_first_pos[1]-event.pos[1])))
-                        self.selection_rect.normalize()
-                        for wall in self.wallGroup:
-                            if(self.selection_rect.colliderect(wall.rect)):
-                                wall.tmpmarked = False
-                                wall.clicked() 
-                                self.changed = True   
-                elif(event.type == MOUSEMOTION):
-                    if(pygame.mouse.get_pressed()[2]):
-                        self.selection_rect = pygame.Rect(self.selection_first_pos, (-(self.selection_first_pos[0]-event.pos[0]), -(self.selection_first_pos[1]-event.pos[1])))
-                        self.selection_rect.normalize()
-                        for wall in self.wallGroup:
-                            if(self.selection_rect.colliderect(wall.rect)):
-                                wall.tmpmarked=True
-                                wall.color()
-                            else:
-                                wall.tmpmarked=False
-                                wall.color()
-                    """
+               
             #Update groups
             self.playerGroup.update(time/1000)
             self.blockGroup.update(time/1000)
