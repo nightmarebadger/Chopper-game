@@ -1,0 +1,271 @@
+import pygame, sys
+from random import randint
+from pygame.locals import *
+from colors import *  
+    
+def terminate():
+    pygame.quit()
+    sys.exit()
+
+class Block(pygame.sprite.Sprite):
+    def __init__(self, game, x, y, width, height):
+        pygame.sprite.Sprite.__init__(self)
+        
+        self.game = game
+        
+        self.image = pygame.Surface((width, height))
+        self.rect = self.image.get_rect()
+        self.rect.center = (x,y)
+        
+        self.vy = 0
+        #self.vx = -speed
+        self.movex = self.movey = 0
+        
+        self.color()
+        
+    def color(self):
+        self.image.fill(GREEN)
+        
+    def update(self, time):
+        self.vx = -self.game.speed
+        self.move(self.vx*time, self.vy*time)
+    
+    def move(self, dx, dy):
+        self.movex += dx
+        self.movey += dy
+        x = int(self.movex)
+        y = int(self.movey)
+        
+        self.rect.x += x
+        if(self.rect.right < 0):
+            #print("Ubijam")
+            self.kill()
+        
+        self.movex -= x
+        self.movey -= y
+
+class Player(pygame.sprite.Sprite):
+    def __init__(self, game, x, y, width, height, speed=50, jumping = False):
+        pygame.sprite.Sprite.__init__(self)
+        
+        self.game = game
+        self.speed = speed
+        
+        self.image = pygame.Surface((width, height))
+        
+        self.rect = self.image.get_rect()
+        self.rect.midbottom = (x,y)
+        
+        self.color()
+        
+        self.vx = self.vy = 0
+        self.movex = self.movey = 0
+        
+        self.jumping = jumping
+        #self.jumptimerbase = 1
+        #self.jumptimer = 0
+        self.holdingJump = False
+        
+        self.keyJump = (MOUSEBUTTONDOWN, 1)
+        self.keyJumpStop = (MOUSEBUTTONUP, 1)
+        
+        
+        
+    def color(self):
+        self.image.fill(RED)
+        
+    def update(self, time):
+        self.calculateMove(time)
+        self.move(0, self.vy*time)
+        for block in self.game.blockGroup:
+            if(self.rect.colliderect(block.rect)):
+                self.game.gameOver()
+        #print(self.vy)
+        
+    def calculateMove(self, time):
+        self.vx = self.speed
+        #if(self.jumping):
+        #    self.vy = - self.game.gravity
+        #else:
+        self.vy += self.game.gravity*time
+        if(self.holdingJump):
+            self.vy -= 2*self.game.gravity*time
+            
+    def move(self, dx, dy):
+        self.movex += dx
+        self.movey += dy
+        x = int(self.movex)
+        y = int(self.movey)
+        
+        if(self.rect.bottom + y > self.game.checkheight):
+            self.rect.bottom = self.game.checkheight
+            self.game.gameOver()
+        elif(self.rect.top + y < 100):
+            self.game.gameOver()
+            
+        else:
+            self.rect.y += y
+        
+        self.rect.x += x
+        
+        self.movex -= x
+        self.movey -= y
+        
+    def keyPress(self, button):
+        #t = type
+        #b = button
+        if(button == self.keyJump):
+            #self.jump()
+            self.startJump()
+        elif(button == self.keyJumpStop):
+            self.stopJump()
+    
+    def startJump(self):
+        self.holdingJump = True
+    
+    def stopJump(self):
+        self.holdingJump = False
+        
+    def jump(self):
+        if(not self.jumping):
+            self.jumping = True
+            self.vy -= 2*self.game.gravity
+        
+        
+        
+class Game:
+    def __init__(self, windowwidth, windowheight, gravity = 500, fps=120, checkwidth = None, checkheight = None):
+        
+        self.windowwidth = windowwidth
+        self.windowheight = windowheight
+        self.checkwidth = checkwidth
+        self.checkheight = checkheight
+        
+        
+        if(not checkwidth):
+            self.checkwidth = windowwidth
+        if(not checkheight):
+            self.checkheight = checkheight
+        self.fps = fps
+        self.gravity = gravity
+        
+        self.backgroundcolor = BLACK
+        self.floorcolor = GREEN
+        self.background = pygame.Surface((self.windowwidth, self.windowheight))
+        self.background.fill(self.backgroundcolor)
+        self.background.fill(self.floorcolor, rect=(0,0,self.windowwidth, 100))
+        self.background.fill(self.floorcolor, rect=(0, self.checkheight, self.windowwidth, self.windowheight - self.checkheight))
+        
+        self.caption = "Runner"
+        
+        self.speed = 100
+        
+    def setup(self):
+        pygame.init()
+        pygame.display.set_caption(self.caption)
+        self.clock = pygame.time.Clock()
+        self.surface = pygame.display.set_mode((self.windowwidth, self.windowheight), SRCALPHA, 32)
+        
+        #Sprite groups
+        self.playerGroup = pygame.sprite.RenderPlain()
+        self.blockGroup = pygame.sprite.RenderPlain()
+        
+        
+        self.playerGroup.add(Player(self,100,300,50,50, jumping=True))
+        
+        self.timer = 0
+        self.makeBlock = True
+        
+    def addBlock(self):
+        width = randint(80,200)
+        height = randint(10,50)
+        self.blockGroup.add(Block(self, self.windowwidth + width, randint(105 + height,695 - height), width, height))
+        #self.blockGroup.add(Block(self, 400,400,100,100))
+        
+    def gameloop(self):
+        self.continue_playing = True
+        self.clock.tick()
+        while(self.continue_playing):
+            time = self.clock.tick(self.fps)
+            self.timer += time/1000
+            if(self.timer >= (1/(self.speed/100)*2)):
+                self.timer = 0
+                self.speed += 5
+                if(self.makeBlock):
+                    self.addBlock()
+                    self.makeBlock = False
+                else:
+                    self.makeBlock = True
+                print(self.speed)
+            #print(self.lattice)
+            #print(self.clock.get_fps())
+            
+            #Key handler
+            for event in pygame.event.get():
+                if(event.type == QUIT):
+                    terminate()
+                elif(event.type == KEYDOWN):
+                    if(event.key == K_ESCAPE):
+                        terminate()
+                elif(event.type == MOUSEBUTTONDOWN or event.type == MOUSEBUTTONUP):
+                    for player in self.playerGroup:
+                        player.keyPress((event.type, event.button))
+                    """
+                        1: levi
+                        2: srednji
+                        3: desni
+                        4: kolešček gor
+                        5: kolešček dol
+                        8: stranski
+                    
+                    """
+                    """
+                    if(event.button == 1):
+                        for player in self.playerGroup:
+                            player.keypress((event.type, event.button))
+                    elif(event.button == 3):
+                        for player in self.playerGroup:
+                            player.keypress((event.type, event.button))
+                elif(event.type == MOUSEBUTTONUP):
+                    if(event.button == 3):
+                        self.selection_rect = pygame.Rect(self.selection_first_pos, (-(self.selection_first_pos[0]-event.pos[0]), -(self.selection_first_pos[1]-event.pos[1])))
+                        self.selection_rect.normalize()
+                        for wall in self.wallGroup:
+                            if(self.selection_rect.colliderect(wall.rect)):
+                                wall.tmpmarked = False
+                                wall.clicked() 
+                                self.changed = True   
+                elif(event.type == MOUSEMOTION):
+                    if(pygame.mouse.get_pressed()[2]):
+                        self.selection_rect = pygame.Rect(self.selection_first_pos, (-(self.selection_first_pos[0]-event.pos[0]), -(self.selection_first_pos[1]-event.pos[1])))
+                        self.selection_rect.normalize()
+                        for wall in self.wallGroup:
+                            if(self.selection_rect.colliderect(wall.rect)):
+                                wall.tmpmarked=True
+                                wall.color()
+                            else:
+                                wall.tmpmarked=False
+                                wall.color()
+                    """
+            #Update groups
+            self.playerGroup.update(time/1000)
+            self.blockGroup.update(time/1000)
+            
+            
+            #Drawing
+            self.surface.blit(self.background, (0,0))
+            
+            self.playerGroup.draw(self.surface)
+            self.blockGroup.draw(self.surface)
+            
+            
+            pygame.display.update()
+    
+    def gameOver(self):
+        terminate()
+
+
+if( __name__ == "__main__") :
+    game = Game(800, 800, fps=240, checkheight = 700)
+    game.setup()
+    game.gameloop()
