@@ -1,3 +1,5 @@
+# coding=utf-8
+
 import pygame, sys
 from random import randint
 from pygame.locals import *
