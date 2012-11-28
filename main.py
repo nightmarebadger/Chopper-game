@@ -8,21 +8,10 @@ def terminate():
     sys.exit()
 
 def normalFont(size, font_name = "menu_font"):
-    """
-    if(font_debug):
-        print("------------")
-        print(size)
-        print(pygame.font.Font("fonts/{0}.ttf".format(font_name), size).get_height())
-        print(pygame.font.SysFont(None, size).get_height())
-        print(pygame.font.Font("fonts/{0}.ttf".format(font_name), int(size * 0.54)).get_height())
-    """
-    #try:
-        #print("Ratalo")
-    return pygame.font.Font("fonts/{0}.ttf".format(font_name), int(size * 0.54))
-    #except:
-    #    print("Ni")
-    #    #print(errno, strerror)
-    #    return pygame.font.Font(None, size)
+    try:
+        return pygame.font.Font("fonts/{0}.ttf".format(font_name), int(size * 0.54))
+    except:
+        return pygame.font.Font(None, size)
 
 def drawText(text, font, surface, x, y, color, option="center"):
     textobj = font.render(text, 1, color)
@@ -52,7 +41,6 @@ class Block(pygame.sprite.Sprite):
         self.rect.center = (x,y)
         
         self.vy = 0
-        #self.vx = -speed
         self.movex = self.movey = 0
         
         self.color()
@@ -72,7 +60,6 @@ class Block(pygame.sprite.Sprite):
         
         self.rect.x += x
         if(self.rect.right < 0):
-            #print("Ubijam")
             self.kill()
         
         self.movex -= x
@@ -96,8 +83,6 @@ class Player(pygame.sprite.Sprite):
         self.movex = self.movey = 0
         
         self.jumping = jumping
-        #self.jumptimerbase = 1
-        #self.jumptimer = 0
         self.holdingJump = False
         
         self.keyJump = (MOUSEBUTTONDOWN, 1)
@@ -114,13 +99,9 @@ class Player(pygame.sprite.Sprite):
         for block in self.game.blockGroup:
             if(self.rect.colliderect(block.rect)):
                 self.game.gameOver()
-        #print(self.vy)
         
     def calculateMove(self, time):
         self.vx = self.speed
-        #if(self.jumping):
-        #    self.vy = - self.game.gravity
-        #else:
         self.vy += self.game.gravity*time
         if(self.holdingJump):
             self.vy -= 2*self.game.gravity*time
@@ -146,10 +127,7 @@ class Player(pygame.sprite.Sprite):
         self.movey -= y
         
     def keyPress(self, button):
-        #t = type
-        #b = button
         if(button == self.keyJump):
-            #self.jump()
             self.startJump()
         elif(button == self.keyJumpStop):
             self.stopJump()
@@ -190,7 +168,7 @@ class Game:
         self.background.fill(self.floorcolor, rect=(0,0,self.windowwidth, 100))
         self.background.fill(self.floorcolor, rect=(0, self.checkheight, self.windowwidth, self.windowheight - self.checkheight))
         
-        self.caption = "Runner"
+        self.caption = "Chopper game"
         
         self.speed = 100
         self.timer = 0
@@ -202,7 +180,6 @@ class Game:
         
     def setup(self):
         pygame.init()
-        #pygame.font.init()
         pygame.display.set_caption(self.caption)
         self.clock = pygame.time.Clock()
         self.surface = pygame.display.set_mode((self.windowwidth, self.windowheight), SRCALPHA, 32)
@@ -219,7 +196,6 @@ class Game:
         width = randint(80,200)
         height = randint(10,50)
         self.blockGroup.add(Block(self, self.windowwidth + width, randint(105 + height,695 - height), width, height))
-        #self.blockGroup.add(Block(self, 400,400,100,100))
         
     def gameloop(self):
         self.continue_playing = True
@@ -229,11 +205,6 @@ class Game:
             self.timer += time/1000
             self.timesincestart += time/1000
             self.score += self.speed*time/1000
-            #self.scoreadd += self.speed*time/1000
-            #self.score += (self.scoreadd//100) * 100
-            #self.scoreadd -= (self.scoreadd//100) * 100
-            #self.scoreadd > 10):
-            #    self.score += 10
             if(self.timer >= (1/(self.speed/100)*2)):
                 self.timer = 0
                 self.speed += 5
@@ -242,9 +213,7 @@ class Game:
                     self.makeBlock = False
                 else:
                     self.makeBlock = True
-                #print(self.speed)
-            #print(self.lattice)
-            #print(self.clock.get_fps())
+
             
             #Key handler
             for event in pygame.event.get():
@@ -275,10 +244,9 @@ class Game:
             
             self.playerGroup.draw(self.surface)
             self.blockGroup.draw(self.surface)
-            drawText("FPS: {0}".format(round(self.clock.get_fps(), 0)), normalFont(50), self.surface, 50, 750, BLACK, option = "left")
+            drawText("FPS: {0}".format(round(self.clock.get_fps())), normalFont(50), self.surface, 50, 750, BLACK, option = "left")
             drawText("Speed: {0}".format(self.speed), normalFont(50), self.surface, self.windowwidth - 50, 750, BLACK, option = "right")
             drawText("Time: {0}".format(round(self.timesincestart, 1)), normalFont(50), self.surface, 50, 50, BLACK, option = "left")
-            #drawText("Score:".format(round(self.score, 0)), normalFont(50), self.surface, self.windowwidth - 150, 50, BLACK, option = "right")
             drawText("Score: {0}".format(round(self.score)), normalFont(50), self.surface, self.windowwidth - 50, 50, BLACK, option = "right")
             
             pygame.display.update()
@@ -291,9 +259,3 @@ if( __name__ == "__main__") :
     game = Game(800, 800, fps=240, checkheight = 700)
     game.setup()
     game.gameloop()
-"""
-with open("test.txt", 'w') as f:
-    f.write("Blabla")
-with open("fonts/menu_font.ttf") as f:
-    print(f.read())
-"""
