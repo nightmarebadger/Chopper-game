@@ -7,6 +7,40 @@ def terminate():
     pygame.quit()
     sys.exit()
 
+def normalFont(size, font_name = "menu_font"):
+    """
+    if(font_debug):
+        print("------------")
+        print(size)
+        print(pygame.font.Font("fonts/{0}.ttf".format(font_name), size).get_height())
+        print(pygame.font.SysFont(None, size).get_height())
+        print(pygame.font.Font("fonts/{0}.ttf".format(font_name), int(size * 0.54)).get_height())
+    """
+    #try:
+        #print("Ratalo")
+    return pygame.font.Font("fonts/{0}.ttf".format(font_name), int(size * 0.54))
+    #except:
+    #    print("Ni")
+    #    #print(errno, strerror)
+    #    return pygame.font.Font(None, size)
+
+def drawText(text, font, surface, x, y, color, option="center"):
+    textobj = font.render(text, 1, color)
+    textrect = textobj.get_rect()
+    if(option == "center"):
+        textrect.center = (x, y)
+    elif(option == "left"):
+        textrect.left = x
+        textrect.centery = y
+    elif(option == "right"):
+        textrect.right = x
+        textrect.centery = y
+    else:
+        textrect.center = (x, y)
+    surface.blit(textobj, textrect)
+    return textrect
+
+
 class Block(pygame.sprite.Sprite):
     def __init__(self, game, x, y, width, height):
         pygame.sprite.Sprite.__init__(self)
@@ -159,9 +193,16 @@ class Game:
         self.caption = "Runner"
         
         self.speed = 100
+        self.timer = 0
+        self.makeBlock = True
+        
+        self.timesincestart = 0
+        self.score = 0
+        #self.scoreadd = 0
         
     def setup(self):
         pygame.init()
+        #pygame.font.init()
         pygame.display.set_caption(self.caption)
         self.clock = pygame.time.Clock()
         self.surface = pygame.display.set_mode((self.windowwidth, self.windowheight), SRCALPHA, 32)
@@ -173,8 +214,6 @@ class Game:
         
         self.playerGroup.add(Player(self,100,300,50,50, jumping=True))
         
-        self.timer = 0
-        self.makeBlock = True
         
     def addBlock(self):
         width = randint(80,200)
@@ -188,6 +227,13 @@ class Game:
         while(self.continue_playing):
             time = self.clock.tick(self.fps)
             self.timer += time/1000
+            self.timesincestart += time/1000
+            self.score += self.speed*time/1000
+            #self.scoreadd += self.speed*time/1000
+            #self.score += (self.scoreadd//100) * 100
+            #self.scoreadd -= (self.scoreadd//100) * 100
+            #self.scoreadd > 10):
+            #    self.score += 10
             if(self.timer >= (1/(self.speed/100)*2)):
                 self.timer = 0
                 self.speed += 5
@@ -196,7 +242,7 @@ class Game:
                     self.makeBlock = False
                 else:
                     self.makeBlock = True
-                print(self.speed)
+                #print(self.speed)
             #print(self.lattice)
             #print(self.clock.get_fps())
             
@@ -229,7 +275,11 @@ class Game:
             
             self.playerGroup.draw(self.surface)
             self.blockGroup.draw(self.surface)
-            
+            drawText("FPS: {0}".format(round(self.clock.get_fps(), 0)), normalFont(50), self.surface, 50, 750, BLACK, option = "left")
+            drawText("Speed: {0}".format(self.speed), normalFont(50), self.surface, self.windowwidth - 50, 750, BLACK, option = "right")
+            drawText("Time: {0}".format(round(self.timesincestart, 1)), normalFont(50), self.surface, 50, 50, BLACK, option = "left")
+            #drawText("Score:".format(round(self.score, 0)), normalFont(50), self.surface, self.windowwidth - 150, 50, BLACK, option = "right")
+            drawText("Score: {0}".format(round(self.score)), normalFont(50), self.surface, self.windowwidth - 50, 50, BLACK, option = "right")
             
             pygame.display.update()
     
@@ -241,3 +291,9 @@ if( __name__ == "__main__") :
     game = Game(800, 800, fps=240, checkheight = 700)
     game.setup()
     game.gameloop()
+"""
+with open("test.txt", 'w') as f:
+    f.write("Blabla")
+with open("fonts/menu_font.ttf") as f:
+    print(f.read())
+"""
